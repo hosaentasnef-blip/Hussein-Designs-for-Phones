@@ -8,6 +8,7 @@
         body { margin: 0; padding: 0; overflow: hidden; background: #2c3e50; font-family: sans-serif; -webkit-user-select: none; touch-action: none; }
         canvas { display: block; }
         
+        /* واجهة المستخدم المحسنة */
         #hud {
             position: absolute; top: 0; width: 100%; height: 55px;
             background: rgba(0, 0, 0, 0.75); border-bottom: 2px solid #ffd700;
@@ -15,26 +16,18 @@
             color: #ffd700; z-index: 10;
         }
         #profile-area { display: flex; align-items: center; margin-bottom: 2px; }
-        #profile-img { width: 20px; height: 20px; border-radius: 50%; border: 1px solid #ffd700; margin-right: 6px; background: #444; }
+        #profile-img { 
+            width: 20px; height: 20px; 
+            border-radius: 50%; 
+            border: 1px solid #ffd700; 
+            margin-right: 6px;
+            background: #444; /* لون احتياطي في حال لم تحمل الصورة */
+        }
         #stats { display: flex; width: 90%; justify-content: space-around; font-size: 13px; font-weight: bold; }
         #event-text { position: absolute; top: 65px; width: 100%; text-align: center; color: #fff; font-size: 16px; font-weight: bold; text-shadow: 2px 2px #000; z-index: 5; }
         
         .controls { position: absolute; bottom: 10px; width: 100%; display: flex; justify-content: space-between; padding: 0 10px; box-sizing: border-box; }
-        .btn { 
-            width: 85px; height: 65px; 
-            background: rgba(255, 255, 255, 0.2); 
-            border: 2px solid #fff; 
-            border-radius: 12px; 
-            color: white; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 12px; 
-            font-weight: bold; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-        /* تأثير عند ضغط الزر */
-        .btn:active { background: rgba(255, 255, 255, 0.5); transform: scale(0.95); }
+        .btn { width: 80px; height: 60px; background: rgba(255, 255, 255, 0.3); border: 2px solid #fff; border-radius: 10px; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
 <body>
@@ -65,10 +58,7 @@
     canvas.height = window.innerHeight;
 
     var game = {
-        dist: 0, coins: 0, 
-        speed: 5, baseSpeed: 5, 
-        nitroActive: false, // متغير جديد للنيترو
-        active: true,
+        dist: 0, coins: 0, speed: 5, baseSpeed: 5, active: true,
         groundY: canvas.height - 60, shake: 0,
         event: "NONE", eventTimer: 0, spawnWait: 0,
         particles: [], clouds: []
@@ -81,6 +71,7 @@
 
     var objects = [], roadCracks = [];
 
+    // توليد الغيوم
     for(var i=0; i<4; i++) {
         game.clouds.push({ x: Math.random()*canvas.width, y: Math.random()*100 + 20, s: Math.random()*0.5 + 0.2, w: 50+Math.random()*30 });
     }
@@ -101,15 +92,6 @@
         }
 
         if (!game.active) return;
-
-        // منطق السرعة: النيترو له الأولوية
-        if (game.nitroActive) {
-            game.speed = 11;
-        } else if (game.event === "BOOST") {
-            game.speed = 12;
-        } else {
-            game.speed = game.baseSpeed;
-        }
 
         for (var i = 0; i < game.clouds.length; i++) {
             game.clouds[i].x -= game.clouds[i].s;
@@ -169,6 +151,7 @@
             game.eventTimer--;
         } else {
             game.event = "NONE";
+            game.speed = game.baseSpeed;
             player.grav = player.baseGrav;
             document.getElementById('event-text').innerText = "";
             
@@ -176,16 +159,21 @@
                 var r = Math.random();
                 if (r < 0.25) {
                     game.event = "QUAKE"; game.eventTimer = 120;
+                    document.getElementById('event-text').style.color = "#ff4500";
                     document.getElementById('event-text').innerText = "⚠️ EARTHQUAKE!";
                 } else if (r < 0.5) {
                     game.event = "STORM"; game.eventTimer = 200;
+                    document.getElementById('event-text').style.color = "#d35400";
                     document.getElementById('event-text').innerText = "💨 SANDSTORM!";
                 } else if (r < 0.75) {
                     game.event = "GRAVITY"; game.eventTimer = 150;
                     player.grav = 0.3;
+                    document.getElementById('event-text').style.color = "#00ffff";
                     document.getElementById('event-text').innerText = "☁️ LOW GRAVITY!";
                 } else {
                     game.event = "BOOST"; game.eventTimer = 100;
+                    game.speed = 12;
+                    document.getElementById('event-text').style.color = "#ffff00";
                     document.getElementById('event-text').innerText = "⚡ SUPER SPEED!";
                 }
             }
@@ -209,7 +197,7 @@
         ctx.fillStyle = "rgba(255,255,255,0.7)";
         for(var i=0; i<game.clouds.length; i++) {
             var c = game.clouds[i];
-            ctx.beginPath(); ctx.arc(c.x, c.y, c.w/2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(c.x, c.y, c.w/2, 0, Math.PI*2); ctx.arc(c.x+20, c.y-10, c.w/2.5, 0, Math.PI*2); ctx.fill();
         }
 
         ctx.save();
@@ -235,11 +223,6 @@
         }
 
         if (player.alive) {
-            // تأثير النيترو البصري (لهب خلف السيارة)
-            if (game.nitroActive) {
-                ctx.fillStyle = "#ff4500";
-                ctx.fillRect(player.x - 15, player.y + 5, 15, 10);
-            }
             ctx.fillStyle = "#e74c3c"; ctx.fillRect(player.x, player.y, player.w, player.h);
             ctx.fillStyle = "#000"; ctx.fillRect(player.x+5, player.y+player.h, 8, 5); ctx.fillRect(player.x+22, player.y+player.h, 8, 5);
         }
@@ -247,32 +230,21 @@
         for (var i = 0; i < game.particles.length; i++) {
             var p = game.particles[i]; ctx.fillStyle = "rgba(255, 69, 0, " + p.life + ")"; ctx.fillRect(p.x, p.y, p.size, p.size);
         }
+
         ctx.restore();
     }
 
     function loop() { update(); draw(); setTimeout(loop, 35); }
 
-    // تحسين أحداث اللمس لزر النيترو والقفز
     var btnJump = document.getElementById('btnJump');
     var btnNitro = document.getElementById('btnNitro');
 
-    // منع القائمة السياقية الافتراضية
-    window.oncontextmenu = function(event) { event.preventDefault(); event.stopPropagation(); return false; };
-
-    btnJump.addEventListener('touchstart', function(e) {
+    btnJump.ontouchstart = function(e) {
         e.preventDefault();
         if (game.active && player.y >= game.groundY - player.h - 10) player.vy = player.jump;
-    }, false);
-
-    btnNitro.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        game.nitroActive = true;
-    }, false);
-
-    btnNitro.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        game.nitroActive = false;
-    }, false);
+    };
+    btnNitro.ontouchstart = function(e) { e.preventDefault(); if(game.event !== "BOOST") game.speed = 10; };
+    btnNitro.ontouchend = function(e) { e.preventDefault(); if(game.event !== "BOOST") game.speed = 5; };
 
     loop();
 </script>
