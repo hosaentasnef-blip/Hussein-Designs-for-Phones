@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>I Am Rich</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: black;
+      overflow: hidden;
+    }
+    .fullImage {
+      width: 100%;
+      height: 100%;
+    }
+    .hidden {
+      display: none;
+    }
+    .button {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+    }
+    .button img {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+    }
+
+    /* دوران مزيف */
+    .rotateOut {
+      -webkit-transition: -webkit-transform 1s ease, opacity 1s ease;
+      -webkit-transform: rotateY(90deg);
+      opacity: 0;
+    }
+    .rotateIn {
+      -webkit-transition: -webkit-transform 1s ease, opacity 1s ease;
+      -webkit-transform: rotateY(0deg);
+      opacity: 1;
+    }
+  </style>
+  <script type="text/javascript">
+    function switchImage() {
+      var oldGem = document.getElementById("oldGem");
+      var newGem = document.getElementById("newGem");
+
+      // دوران وخروج الأولى
+      oldGem.className = "rotateOut";
+
+      setTimeout(function() {
+        oldGem.style.display = "none";
+        newGem.style.display = "block";
+        newGem.className = "rotateIn";
+
+        // نافذة رسمية من المتصفح
+        var back = confirm("Do you want to go back to the first picture?");
+        if (back) {
+          backToFirst();
+        }
+      }, 1000);
+    }
+
+    function backToFirst() {
+      var oldGem = document.getElementById("oldGem");
+      var newGem = document.getElementById("newGem");
+
+      // دوران وخروج الثانية
+      newGem.className = "rotateOut";
+
+      setTimeout(function() {
+        newGem.style.display = "none";
+        oldGem.style.display = "block";
+        oldGem.className = "rotateIn";
+      }, 1000);
+    }
+  </script>
+</head>
+<body>
+  <!-- الصورة الأولى -->
+  <div id="oldGem">
+    <img src="red-gem.png" alt="Glowing Red Gem" class="fullImage">
+  </div>
+  <!-- الصورة الثانية -->
+  <div id="newGem" class="hidden">
+    <img src="second-picture.png" alt="New Image" class="fullImage">
+  </div>
+  <!-- زر التبديل -->
+  <div class="button">
+    <img src="i.png" alt="Button Icon" onclick="switchImage()">
+  </div>
+</body>
+</html>

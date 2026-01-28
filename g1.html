@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Desert Elite - @Hussein.90s</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background: #2c3e50; font-family: sans-serif; -webkit-user-select: none; }
+        canvas { display: block; touch-action: none; }
+        #hud {
+            position: absolute; top: 0; width: 100%; height: 60px;
+            background: rgba(0, 0, 0, 0.85); border-bottom: 2px solid #ffd700;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #ffd700; z-index: 10;
+        }
+        #header-profile { display: flex; align-items: center; }
+        #profile-img { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ffd700; margin-right: 6px; }
+        #designer { font-size: 10px; font-weight: bold; }
+        #stats { display: flex; width: 100%; justify-content: space-around; font-size: 12px; font-weight: bold; }
+        #event-text { position: absolute; top: 70px; width: 100%; text-align: center; color: #ff4500; font-weight: bold; font-size: 14px; }
+        .controls { position: absolute; bottom: 15px; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; }
+        .btn { width: 75px; height: 65px; background: rgba(255, 255, 255, 0.2); border: 2px solid #fff; border-radius: 12px; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="hud">
+    <div id="header-profile">
+        <img src="channels4_profile.jpg" id="profile-img" onerror="this.style.visibility='hidden'">
+        <div id="designer">@Hussein.90s</div>
+    </div>
+    <div id="stats">
+        <div>KM: <span id="dist">0</span></div>
+        <div>GOLD: <span id="coins">0</span></div>
+    </div>
+</div>
+<div id="event-text"></div>
+<canvas id="gameCanvas"></canvas>
+
+<div class="controls">
+    <div id="btnJump" class="btn">JUMP ▲</div>
+    <div id="btnNitro" class="btn" style="border-color:#ff4500; color:#ff4500">NITRO 🔥</div>
+</div>
+
+<script>
+    var canvas = document.getElementById('gameCanvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    var game = {
+        dist: 0, coins: 0, speed: 6, active: true,
+        groundY: canvas.height - 70, shake: 0, fragments: [],
+        event: "NONE", eventTimer: 0, roadCracks: [],
+        safeDistance: 0 // العداد الجديد لمنع العقبات العشوائية المتلاصقة
+    };
+
+    var player = { x: 50, y: 0, w: 40, h: 22, vy: 0, grav: 0.85, jump: -12.5, visible: true };
+    var objects = [];
+
+    function update() {
+        if (!game.active) {
+            for (var j = 0; j < game.fragments.length; j++) {
+                var f = game.fragments[j]; f.x += f.vx; f.y += f.vy; f.vy += 0.7;
+            }
+            return;
+        }
+
+        player.vy += player.grav;
+        player.y += player.vy;
+
+        // التحقق من الحفر
+        var inCrack = false;
+        for(var c=0; c<game.roadCracks.length; c++) {
+            var crack = game.roadCracks[c];
+            if(player.x + 10 > crack.x && player.x + 30 < crack.x + crack.w) inCrack = true;
+        }
+
+        if(player.y > game.groundY - player.h) {
+            if(inCrack) { triggerDeath(); }
+            else { player.y = game.groundY - player.h; player.vy = 0; }
+        }
+
+        game.dist += (game.speed / 20);
+        document.getElementById('dist').innerHTML = Math.floor(game.dist);
+        
+        // تحريك العناصر والتحقق من التصادم
+        for (var i = objects.length - 1; i >= 0; i--) {
+            objects[i].x -= game.speed;
+            if (player.visible && player.x < objects[i].x + objects[i].w && player.x + player.w > objects[i].x &&
+                player.y < objects[i].y + objects[i].h && player.y + player.h > objects[i].y) {
+                if (objects[i].type === 'coin') { game.coins++; objects.splice(i, 1); } 
+                else { triggerDeath(); }
+            } else if (objects[i].x < -60) objects.splice(i, 1);
+        }
+
+        for (var k = game.roadCracks.length - 1; k >= 0; k--) {
+            game.roadCracks[k].x -= game.speed;
+            if (game.roadCracks[k].x < -100) game.roadCracks.splice(k, 1);
+        }
+
+        handleEvents();
+        spawnLogic();
+        
+        // تقليل عداد مسافة الأمان مع كل إطار
+        if(game.safeDistance > 0) game.safeDistance -= game.speed;
+    }
+
+    function spawnLogic() {
+        // لا تضع أي عقبة إذا كان هناك حدث مفاجئ أو إذا لم تنتهِ مسافة الأمان
+        if (game.safeDistance <= 0 && Math.random() < 0.03) {
+            var isCoin = Math.random() > 0.6;
+            
+            // إذا كان صبار، نضع مسافة أمان إجبارية بعده (مثلاً 200 بكسل)
+            if (!isCoin) {
+                game.safeDistance = 220; 
+                objects.push({ x: canvas.width + 50, y: game.groundY - 42, w: 25, h: 42, type: 'cactus' });
+            } else {
+                // العملات لا تحتاج مسافة أمان كبيرة
+                objects.push({ x: canvas.width + 50, y: game.groundY - 80, w: 25, h: 25, type: 'coin' });
+            }
+        }
+    }
+
+    function handleEvents() {
+        if(game.eventTimer > 0) {
+            game.eventTimer--;
+            if(game.event === "QUAKE") game.shake = 2;
+        } else {
+            game.event = "NONE";
+            document.getElementById('event-text').innerHTML = "";
+            if(Math.random() < 0.005 && game.dist > 100) {
+                var r = Math.random();
+                if(r < 0.4) {
+                    game.event = "QUAKE"; game.eventTimer = 150;
+                    document.getElementById('event-text').innerHTML = "⚠️ EARTHQUAKE!";
+                } else if(r < 0.7) {
+                    game.event = "STORM"; game.eventTimer = 200;
+                    document.getElementById('event-text').innerHTML = "💨 SANDSTORM!";
+                } else {
+                    // حفرة مفاجئة - نمنع ظهور صبار بجانبها تماماً
+                    game.roadCracks.push({ x: canvas.width + 50, w: 90 });
+                    game.safeDistance = 350; 
+                    document.getElementById('event-text').innerHTML = "🕳️ ROAD COLLAPSE!";
+                }
+            }
+        }
+    }
+
+    function triggerDeath() {
+        game.active = false; game.shake = 15; player.visible = false;
+        for (var i = 0; i < 6; i++) game.fragments.push({ x: player.x+20, y: player.y+10, vx: (Math.random()-0.5)*12, vy: (Math.random()-0.8)*14, size: 5 });
+        setTimeout(function() { location.reload(); }, 1800);
+    }
+
+    function draw() {
+        ctx.fillStyle = (game.event === "STORM") ? "#e67e22" : "#4facfe";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        if (game.shake > 0) ctx.translate(Math.random()*10-5, Math.random()*10-5);
+        ctx.fillStyle = "#d35400"; ctx.fillRect(0, game.groundY, canvas.width, 70);
+        ctx.fillStyle = "#2c3e50"; 
+        for(var i=0; i<game.roadCracks.length; i++) ctx.fillRect(game.roadCracks[i].x, game.groundY, game.roadCracks[i].w, 70);
+        for (var i = 0; i < objects.length; i++) {
+            var o = objects[i];
+            if (o.type === 'coin') { ctx.fillStyle = "#ffd700"; ctx.beginPath(); ctx.arc(o.x+12, o.y+12, 10, 0, 6.3); ctx.fill(); }
+            else { ctx.fillStyle = "#2e7d32"; ctx.fillRect(o.x+10, o.y, 8, 42); ctx.fillRect(o.x, o.y+15, 24, 6); }
+        }
+        if (player.visible) {
+            ctx.fillStyle = "#e74c3c"; ctx.fillRect(player.x, player.y, player.w, player.h - 5);
+            ctx.fillStyle = "#000"; ctx.fillRect(player.x+5, player.y+player.h-5, 9, 9); ctx.fillRect(player.x+26, player.y+player.h-5, 9, 9);
+        }
+        ctx.fillStyle = "#c0392b";
+        for (var k = 0; k < game.fragments.length; k++) ctx.fillRect(game.fragments[k].x, game.fragments[k].y, 5, 5);
+        ctx.restore();
+    }
+
+    document.getElementById('btnJump').addEventListener('touchstart', function(e) {
+        e.preventDefault(); if (game.active && player.y >= game.groundY - player.h) player.vy = player.jump;
+    }, false);
+    document.getElementById('btnNitro').addEventListener('touchstart', function(e) {
+        e.preventDefault(); if(game.active) game.speed = 11;
+    }, false);
+    document.getElementById('btnNitro').addEventListener('touchend', function(e) {
+        e.preventDefault(); game.speed = 6;
+    }, false);
+
+    setInterval(function(){ update(); draw(); }, 35);
+</script>
+</body>
+</html>
