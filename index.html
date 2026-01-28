@@ -1,89 +1,176 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar" dir="rtl">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>تصاميم حسين للهواتف</title>
   <style type="text/css">
+    /* عام */
     body {
-      background-color: #f0f0f0;
+      background-color: #ececec;
       font-family: Arial, Helvetica, sans-serif;
+      color: #222222;
+      margin: 0;
+      padding: 20px;
       text-align: center;
-      margin: 30px;
     }
+
+    /* حاوية مركزية */
+    .container {
+      width: 92%;
+      max-width: 480px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 14px;
+      -webkit-border-radius: 8px;
+      border-radius: 8px;
+      border: 1px solid #d0d0d0;
+      -webkit-box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+    }
+
+    /* رأس الصفحة */
     h1 {
-      color: #333333;
       font-size: 20px;
+      margin: 6px 0 10px 0;
+      color: #1a1a1a;
     }
-    img {
-      border: 2px solid #333333;
+    .subtitle {
+      font-size: 12px;
+      color: #666666;
+      margin-bottom: 12px;
     }
+
+    /* بطاقة الملف الشخصي */
     .profile {
-      margin-top: 15px;
+      display: block;
+      margin: 8px auto;
+      padding: 8px;
+      text-align: center;
+      background-color: #fbfbfb;
+      border: 1px solid #e6e6e6;
+      -webkit-border-radius: 6px;
+      border-radius: 6px;
     }
     .profile img {
-      width: 120px;
-      height: auto;
-    }
-    .profile p {
-      font-size: 14px;
-      color: #555555;
-      margin-top: 5px;
-    }
-    .app-box {
-      display: inline-block;
-      border: 2px solid #333333;
-      padding: 10px;
-      margin-top: 20px;
-      background-color: #ffffff;
-    }
-    .app-box img {
-      width: 80px;
+      width: 110px;
       height: auto;
       display: block;
       margin: 0 auto;
+      -webkit-border-radius: 6px;
+      border-radius: 6px;
+      border: 2px solid #dcdcdc;
     }
-    .app-box p {
+    .profile .username {
+      margin-top: 6px;
       font-size: 14px;
-      color: #555555;
-      margin: 5px 0;
+      color: #333333;
     }
-    .note {
-      font-size: 12px;
-      color: #777777;
-      margin-top: 5px;
+
+    /* شبكة التطبيقات */
+    .apps {
+      margin-top: 14px;
+      text-align: center;
     }
-    a {
-      text-decoration: none;
+    .app-box {
+      display: inline-block;
+      width: 140px;
+      vertical-align: top;
+      margin: 6px;
+      padding: 8px;
+      background-color: #ffffff;
+      border: 1px solid #dcdcdc;
+      -webkit-border-radius: 6px;
+      border-radius: 6px;
+    }
+    .app-box a {
       color: #000000;
+      text-decoration: none;
+      display: block;
+    }
+    .app-box .title {
+      font-size: 13px;
+      color: #222222;
+      margin-bottom: 6px;
+    }
+    .app-box img {
+      width: 72px;
+      height: auto;
+      display: block;
+      margin: 0 auto 6px auto;
+      border: 1px solid #cccccc;
+      -webkit-border-radius: 4px;
+      border-radius: 4px;
+    }
+    .app-box .note {
+      font-size: 11px;
+      color: #777777;
+    }
+
+    /* زر كلاسيكي صغير */
+    .btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 10px;
+      background-color: #2b7cff;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 13px;
+      -webkit-border-radius: 4px;
+      border-radius: 4px;
+      border: 1px solid #1f5fd6;
+    }
+
+    /* تباعد سفلي */
+    .footer-note {
+      font-size: 11px;
+      color: #888888;
+      margin-top: 12px;
+    }
+
+    /* تحسينات للمتصفحات القديمة */
+    /* استخدام بادئات WebKit لزيادة التوافق مع Safari القديم */
+    @media screen and (max-width: 320px) {
+      .app-box { width: 120px; }
+      .app-box img { width: 64px; }
     }
   </style>
 </head>
 <body>
-  <h1>تصاميم حسين للهواتف</h1>
+  <div class="container">
+    <h1>تصاميم حسين للهواتف</h1>
+    <div class="subtitle">واجهة بسيطة ومتوافقة مع الهواتف القديمة</div>
 
-  <!-- صورة الحساب واسم المستخدم -->
-  <div class="profile">
-    <img src="channels4_profile.jpg" alt="حساب حسين">
-    <p>@Hussein.90s</p>
+    <!-- بطاقة الملف الشخصي -->
+    <div class="profile">
+      <img src="channels4_profile.jpg" alt="حساب حسين">
+      <div class="username">@Hussein.90s</div>
+    </div>
+
+    <!-- شبكة التطبيقات -->
+    <div class="apps">
+      <!-- تطبيق انا فقير -->
+      <div class="app-box">
+        <a href="sg.html">
+          <div class="title">تطبيق انا فقير</div>
+          <img src="r1.png" alt="تطبيق انا فقير">
+          <div class="note">تعمل هذه الصفحة على الهواتف  القديمة</div>
+        </a>
+      </div>
+
+      <!-- تطبيق لعبة السيارة -->
+      <div class="app-box">
+        <a href="g1.html">
+          <div class="title">تطبيق لعبة السيارة</div>
+          <img src="g1.png" alt="تطبيق لعبة السيارة">
+          <div class="note">تعمل هذه الصفحة على الهواتف  القديمة</div>
+        </a>
+      </div>
+    </div>
+
+    <a class="btn" href="sg.html">الذهاب إلى الموقع الأول</a>
+
+    <div class="footer-note">موقع خفيف ومصمم للتعامل مع الهواتف القديمة.</div>
   </div>
-
-  <!-- مربع التطبيق الأول -->
-  <div class="app-box">
-    <a href="sg.html">
-      <p>تطبيق انا فقير</p>
-      <img src="r1.png" alt="تطبيق انا فقير">
-      <p class="note">تعمل هذه الصفحة على الايفونات القديمة</p>
-    </a>
-  </div>
-
-  <!-- مربع التطبيق الجديد -->
-  <div class="app-box">
-    <a href="g1.html">
-      <p>تطبيق لعبة السيارة</p>
-      <img src="g1.png" alt="تطبيق لعبة السيارة">
-      <p class="note">تعمل هذه الصفحة على الايفونات القديمة</p>
-    </a>
-  </div>
-
 </body>
 </html>
