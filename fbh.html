@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <title>لعبة حسين - الإصدار المتجاوب</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <style>
+        /* إعدادات CSS لضمان ملء الشاشة بدون حواف بيضاء */
+        body, html { 
+            margin: 0; 
+            padding: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            background: #000; /* خلفية سوداء للحواف في الشاشات العريضة */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        canvas { 
+            display: block; 
+            background: #70c5ce;
+            /* جعل الكانفاس يتناسب مع الطول المتاح دائماً */
+            max-width: 100%;
+            max-height: 100%;
+            image-rendering: pixelated; /* الحفاظ على حدة الصور في الهواتف القديمة */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        var cvs = document.getElementById("gameCanvas");
+        var ctx = cvs.getContext("2d");
+
+        // --- نظام التناسب الذكي ---
+        // نحدد نسبة طول الشاشة الافتراضية (مثل آيفون 3G وهي 1.5)
+        var targetRatio = 320 / 480; 
+        var screenW = window.innerWidth;
+        var screenH = window.innerHeight;
+
+        // حساب الأبعاد بناءً على حجم شاشة المستخدم الفعلية
+        if (screenW / screenH > targetRatio) {
+            cvs.height = screenH;
+            cvs.width = screenH * targetRatio;
+        } else {
+            cvs.width = screenW;
+            cvs.height = screenW / targetRatio;
+        }
+
+        // معامل القياس (Scaling Factor) لضبط أحجام العناصر برمجياً حسب جودة الشاشة
+        var scale = cvs.width / 320;
+
+        // تحميل الصور
+        var images = {};
+        var srcList = {
+            bird: "bf.jpg", bg: "mm.png", fg: "pp.png", tap: "me.png",
+            board: "image_656ca7.png", pipe: "ee.png",
+            m1: "gq.png", m2: "gq2.png", m3: "gq3.png", logo: "h90g.jpg"
+        };
+
+        var loadCount = 0;
+        for (var key in srcList) {
+            images[key] = new Image();
+            images[key].src = srcList[key];
+            images[key].onload = function() { if (++loadCount == 10) draw(); };
+        }
+
+        // متغيرات اللعبة (معدلة لتتناسب مع الـ Scale)
+        var birdY = cvs.height / 3, birdX = 50 * scale;
+        var velocity = 0, gravity = 0.4 * scale, jump = -6 * scale;
+        var score = 0, bgX = 0, fgX = 0;
+        var bestScore = localStorage.getItem("flappyBest") || 0;
+        var gameStarted = false, gameOver = false;
+
+        var pipes = [];
+        pipes[0] = { x: cvs.width, y: 0 };
+
+        // التحكم
+        var handleAction = function(e) {
+            if (e.cancelable) e.preventDefault();
+            if (gameOver) { location.reload(); return; }
+            if (!gameStarted) gameStarted = true;
+            velocity = jump;
+        };
+        document.addEventListener("touchstart", handleAction, {passive: false});
+        document.addEventListener("mousedown", handleAction);
+
+        function draw() {
+            // 1. الخلفية (تتمدد لتملأ العرض)
+            ctx.drawImage(images.bg, bgX, 0, cvs.width, cvs.height);
+            ctx.drawImage(images.bg, bgX + cvs.width, 0, cvs.width, cvs.height);
+            if(gameStarted && !gameOver) bgX -= 0.5 * scale;
+            if (bgX <= -cvs.width) bgX = 0;
+
+            // 2. الأنابيب
+            if(gameStarted) {
+                for (var i = 0; i < pipes.length; i++) {
+                    var gap = 140 * scale;
+                    var pipeW = 50 * scale;
+                    
+                    // العلوي
+                    ctx.save();
+                    ctx.translate(pipes[i].x + pipeW, pipes[i].y);
+                    ctx.rotate(Math.PI);
+                    ctx.drawImage(images.pipe, 0, 0, pipeW, cvs.height);
+                    ctx.restore();
+                    
+                    // السفلي
+                    ctx.drawImage(images.pipe, pipes[i].x, pipes[i].y + gap, pipeW, cvs.height);
+
+                    if (!gameOver) pipes[i].x -= 2 * scale;
+                    if (pipes[i].x < cvs.width * 0.4 && pipes[i].added !== true) {
+                        pipes.push({ x: cvs.width, y: Math.floor(Math.random() * (cvs.height * 0.5)) + 50 * scale });
+                        pipes[i].added = true;
+                    }
+
+                    // التصادم
+                    if (birdX + (30*scale) > pipes[i].x && birdX < pipes[i].x + pipeW && 
+                       (birdY < pipes[i].y || birdY + (25*scale) > pipes[i].y + gap) || 
+                        birdY + (30*scale) > cvs.height - (60*scale)) {
+                        gameOver = true;
+                    }
+                    if (pipes[i].x + pipeW < birdX && !pipes[i].passed) {
+                        score++;
+                        pipes[i].passed = true;
+                    }
+                }
+            }
+
+            // 3. الأرضية
+            var fgH = 60 * scale;
+            ctx.drawImage(images.fg, fgX, cvs.height - fgH, cvs.width, fgH);
+            ctx.drawImage(images.fg, fgX + cvs.width, cvs.height - fgH, cvs.width, fgH);
+            if(gameStarted && !gameOver) fgX -= 2 * scale;
+            if (fgX <= -cvs.width) fgX = 0;
+
+            // 4. اللاعب
+            ctx.save();
+            ctx.translate(birdX + (17.5*scale), birdY + (15*scale));
+            if(gameStarted && !gameOver) {
+                velocity += gravity;
+                birdY += velocity;
+                var rotation = (velocity / jump) * -0.3;
+                ctx.rotate(rotation);
+            }
+            ctx.drawImage(images.bird, -(17.5*scale), -(15*scale), 35*scale, 30*scale);
+            ctx.restore();
+
+            // 5. الواجهات
+            if(!gameStarted) {
+                var logoSize = 180 * scale;
+                ctx.drawImage(images.logo, cvs.width/2 - logoSize/2, cvs.height/4, logoSize, logoSize);
+                ctx.drawImage(images.tap, cvs.width/2 - 25*scale, cvs.height/2 + 50*scale, 50*scale, 60*scale);
+            }
+
+            if (gameOver) {
+                var bW = 226 * scale, bH = 114 * scale;
+                var bX = cvs.width/2 - bW/2, bY = cvs.height/2 - bH/2;
+                ctx.drawImage(images.board, bX, bY, bW, bH);
+                
+                var medal = (score >= 179) ? images.m3 : (score >= 90 ? images.m1 : images.m2);
+                ctx.drawImage(medal, bX + 25*scale, bY + 42*scale, 45*scale, 45*scale);
+
+                ctx.fillStyle = "#553311";
+                ctx.font = "bold " + (16 * scale) + "px Arial";
+                ctx.fillText(score, bX + 175*scale, bY + 48*scale);
+                ctx.fillText(bestScore, bX + 175*scale, bY + 90*scale);
+                if (score > bestScore) localStorage.setItem("flappyBest", score);
+            } else if (gameStarted) {
+                ctx.fillStyle = "#FFF"; ctx.strokeStyle = "#000"; 
+                ctx.font = "bold " + (30 * scale) + "px Arial";
+                ctx.lineWidth = 2 * scale;
+                ctx.strokeText(score, cvs.width/2 - 10*scale, 50*scale);
+                ctx.fillText(score, cvs.width/2 - 10*scale, 50*scale);
+            }
+
+            setTimeout(function() { requestAnimationFrame(draw); }, 1000/40);
+        }
+
+        window.requestAnimationFrame = window.requestAnimationFrame || function(c) { setTimeout(c, 10); };
+    </script>
+</body>
+</html>
